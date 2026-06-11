@@ -25,6 +25,8 @@ FROM alpine:3.22
 WORKDIR /app
 RUN apk add --no-cache ca-certificates tzdata
 COPY --from=go-builder /out/pblauncher /usr/local/bin/pblauncher
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV TZ=UTC \
     APP_DOMAIN=pb.example.com \
@@ -43,26 +45,4 @@ ENV TZ=UTC \
 EXPOSE 7080 8443
 VOLUME ["/app/pb_data", "/app/data", "/app/downloads", "/app/.certificates", "/app/.accounts"]
 
-CMD sh -ec 'cat > /app/config.yml <<EOF
-# Generated at container startup. Configure these values with environment variables.
-domain: ${APP_DOMAIN}
-bind_address: ${BIND_ADDRESS}
-listen_address: ${LISTEN_ADDRESS}
-http_port: "${HTTP_PORT}"
-https: ${HTTPS}
-https_port: "${HTTPS_PORT}"
-disable_https_redirect: ${DISABLE_HTTPS_REDIRECT}
-download_dir: ${DOWNLOAD_DIR}
-certificates_dir: ${CERTIFICATES_DIR}
-accounts_dir: ${ACCOUNTS_DIR}
-data_dir: ${DATA_DIR}
-acme_email: "${ACME_EMAIL}"
-min_certificate_ttl: 720h
-max_domain_cert_attempts: 1
-cert_request_planner_interval: 5m
-cert_request_executor_interval: 1m
-certificate_check_interval: 1m
-release_sync_interval: 5m
-command_check_interval: 10s
-EOF
-exec pblauncher -c /app/config.yml'
+CMD ["docker-entrypoint.sh"]
