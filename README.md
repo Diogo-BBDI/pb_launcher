@@ -125,6 +125,24 @@ command_check_interval: 10s
 To run the project, you can use `make run` or `go run *.go -c config.yml`.
 For the UI, navigate to the `ui` directory and run `npm run dev`.
 
+## Docker / Coolify
+
+This repository includes a `Dockerfile` and `docker-compose.yml` ready for Coolify.
+
+In Coolify, create a new Docker Compose application from this repository and set:
+
+- `APP_DOMAIN`: your public domain without protocol, for example `pb.example.com`.
+- Internal/service port: `7080`.
+- Keep `HTTPS=false` and `DISABLE_HTTPS_REDIRECT=true` when Coolify terminates TLS for you.
+
+For local testing:
+
+```bash
+APP_DOMAIN=localhost docker compose up --build
+```
+
+Persistent data is stored in Docker volumes for PocketBase data, launcher data, downloads, certificates, and ACME accounts.
+
 # Domain and SSL Certificates
 
 For custom domains, certificates are issued using **Let's Encrypt**.

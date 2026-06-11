@@ -1,0 +1,38 @@
+services:
+  pblauncher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        COMMIT: ${COMMIT:-none}
+    restart: unless-stopped
+    environment:
+      # Set this in Coolify to the public domain without protocol, e.g. pb.example.com
+      APP_DOMAIN: ${APP_DOMAIN:-pb.example.com}
+      # Coolify/Traefik normally terminates TLS, so the app should serve HTTP internally.
+      HTTPS: ${HTTPS:-false}
+      DISABLE_HTTPS_REDIRECT: ${DISABLE_HTTPS_REDIRECT:-true}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+      TZ: ${TZ:-UTC}
+    ports:
+      # Local testing only. In Coolify, point the service/proxy to internal port 7080.
+      - "7080:7080"
+    volumes:
+      - pblauncher_pb_data:/app/pb_data
+      - pblauncher_data:/app/data
+      - pblauncher_downloads:/app/downloads
+      - pblauncher_certificates:/app/.certificates
+      - pblauncher_accounts:/app/.accounts
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- --header=\"Host: $${APP_DOMAIN}\" http://127.0.0.1:7080/api/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  pblauncher_pb_data:
+  pblauncher_data:
+  pblauncher_downloads:
+  pblauncher_certificates:
+  pblauncher_accounts:
