@@ -12,6 +12,10 @@ import (
 
 func RunHttpProxy(lc fx.Lifecycle, handler *DynamicReverseProxy, cfg configs.Config) {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
 	mux.Handle("/", handler)
 
 	addr := fmt.Sprintf("%s:%s", cfg.GetListenIPAddress(), cfg.GetHttpPort())

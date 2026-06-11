@@ -24,7 +24,7 @@ services:
       - pblauncher_certificates:/app/.certificates
       - pblauncher_accounts:/app/.accounts
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- --header=\"Host: $${APP_DOMAIN}\" http://127.0.0.1:7080/api/health >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7080/healthz >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
