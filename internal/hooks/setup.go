@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"pb_launcher/configs"
+	"strings"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
@@ -15,10 +17,33 @@ import (
 func RegisterAdminExistsRoute(app *pocketbase.PocketBase, c configs.Config) {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		se.Router.GET("/x-api/proxy_configs", func(e *core.RequestEvent) error {
+			useHTTPS := c.IsHttpsEnabled()
+			httpPort := c.GetHttpPort()
+			httpsPort := c.GetHttpsPort()
+
+			forwardedProto := strings.ToLower(strings.TrimSpace(e.Request.Header.Get("X-Forwarded-Proto")))
+			if forwardedProto != "" {
+				useHTTPS = strings.Split(forwardedProto, ",")[0] == "https"
+			}
+
+			if _, port, err := net.SplitHostPort(e.Request.Host); err == nil {
+				if useHTTPS {
+					httpsPort = port
+				} else {
+					httpPort = port
+				}
+			} else if forwardedProto != "" {
+				if useHTTPS {
+					httpsPort = ""
+				} else {
+					httpPort = ""
+				}
+			}
+
 			response := map[string]any{
-				"use_https":   c.IsHttpsEnabled(),
-				"http_port":   c.GetHttpPort(),
-				"https_port":  c.GetHttpsPort(),
+				"use_https":   useHTTPS,
+				"http_port":   httpPort,
+				"https_port":  httpsPort,
 				"base_domain": c.GetDomain(),
 			}
 			return e.JSON(http.StatusOK, response)
